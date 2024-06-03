@@ -1,10 +1,15 @@
-#!/anaconda3/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Main SNAPS script for assigning an observed shift list based on predicted shifts
 
 @author: aph516
 """
+from tabulate import tabulate
+
+from SNAPS_importer import SNAPS_importer
+from SNAPS_assigner import SNAPS_assigner
+import logging
 
 import pdb
 
@@ -25,8 +30,8 @@ def get_arguments(system_args):
     # Information on input files and configuration options
     parser.add_argument("--shift_type",
                         choices=["snaps", "ccpn", "sparky", "mars",
-                                 "xeasy", "nmrpipe", "test"],
-                        default="snaps",
+                                 "xeasy", "nmrpipe", "nef", "test"],
+                        default="snaps", 
                         help="The format of the observed shift file.")
     parser.add_argument("--pred_type",
                         choices=["shiftx2", "sparta+"],
@@ -45,6 +50,9 @@ def get_arguments(system_args):
                         classes for the i-1 residue. No spaces.
                         eg. "ACDEFGHIKLMNPQRSTVWY;G,S,T,AVI,DN,FHYWC,REKPQML" for
                         a sequential HADAMAC """)
+    parser.add_argument("--aa_types", default=None, nargs=1,
+                        help="""A file containing restraints on different residue types.""")
+
     #TODO: Need to rethink how SS_class info is imported.
 
     # Options controlling output files
@@ -54,7 +62,7 @@ def get_arguments(system_args):
     parser.add_argument("--shift_output_file", default=None,
                         help="""The file the assigned shiftlist will be written to.""")
     parser.add_argument("--shift_output_type", default="sparky",
-                        choices=["sparky","xeasy","nmrpipe"],
+                        choices=["sparky", "xeasy", "nmrpipe"],
                         help="One or more output formats for chemical shift export")
     parser.add_argument("--shift_output_confidence", nargs="*",
                         choices=["High","Medium","Low","Unreliable","Undefined"],
@@ -83,9 +91,6 @@ def get_arguments(system_args):
     return(args)
 
 def runSNAPS(system_args):
-    from SNAPS_importer import SNAPS_importer
-    from SNAPS_assigner import SNAPS_assigner
-    import logging
 
     #### Command line arguments
     args = get_arguments(system_args)
@@ -112,10 +117,10 @@ def runSNAPS(system_args):
 
 
     #### Set up the SNAPS_assigner object
-    a = SNAPS_assigner()
+    assigner = SNAPS_assigner()
 
     # Import config file
-    a.read_config_file(args.config_file)
+    assigner.read_config_file(args.config_file)
 
 
     # Import observed and predicted shifts
@@ -132,46 +137,73 @@ def runSNAPS(system_args):
     else:
         importer.import_obs_shifts(args.shift_file, args.shift_type, SS_num=False)
 
-    a.obs = importer.obs
+    ##
+    assigner.obs = importer.obs
     logger.info("Finished reading in %d spin systems from %s",
-                 len(a.obs["SS_name"]), args.shift_file)
+                 len(assigner.obs["SS_name"]), args.shift_file)
 
 
-    a.import_pred_shifts(args.pred_file, args.pred_type, args.pred_seq_offset)
+    assigner.import_pred_shifts(args.pred_file, args.pred_type, args.pred_seq_offset)
+
+    # GST add call to importer to read residue restraints from file using
+    # file name in args
+    # possibly add self.pars["use_ss_class_info"] but I guess should already exist??
+
+
+    if args.aa_types:
+        if args.shift_type=="snaps":
+            importer.import_aa_type_info(args.aa_types[0])
+            assigner.pars["use_ss_class_info"] = True
+    elif args.shift_type=='nef' and not args.aa_types:
+        importer.import_aa_type_info_nef(args.shift_file)
+        assigner.pars["use_ss_class_info"] = True
+    else:
+        assigner.pars["use_ss_class_info"] = False
 
     #### Do the analysis
-    a.prepare_obs_preds()
-    a.calc_log_prob_matrix()
-    a.calc_mismatch_matrix()
+    assigner.prepare_obs_preds()
+    assigner.calc_log_prob_matrix()
+    assigner.calc_mismatch_matrix()
 
-    if a.pars["iterate_until_consistent"]:
-        a.assign_df = a.find_consistent_assignments(set_assign_df=True)
+    if assigner.pars["iterate_until_consistent"]:
+        assigner.assign_df = assigner.find_consistent_assignments(set_assign_df=True)
     else:
-        a.assign_from_preds(set_assign_df=True)
+        assigner.assign_from_preds(set_assign_df=True)
         # breakpoint()
-        a.add_consistency_info(threshold=a.pars["seq_link_threshold"])
+        assigner.add_consistency_info(threshold=assigner.pars["seq_link_threshold"])
         # breakpoint()
 
     #### Output the results
-    a.assign_df.to_csv(args.output_file, sep="\t", float_format="%.3f",
-                           index=False)
+    headings = '''
+        Res_name Res_N Res_type SS_name Dummy_res Dummy_SS CA CA_pred HA HA_pred H H_pred CB CB_pred
+         C C_pred N N_pred Log_prob Max_mismatch_m1 Max_mismatch_p1 Num_good_links_m1 
+    '''.split()
+    table = []
+    for df_index, df_row in assigner.assign_df.iterrows():
+        table_row = []
+        table.append(table_row)
+        for heading in headings:
+            table_row.append(df_row[heading])
 
+    with open(args.output_file, 'w') as fp:
+        print(tabulate(table, tablefmt='plain', headers=headings), file=fp)
+    
     logger.info("Finished writing results to %s", args.output_file)
 
     #### Write chemical shift lists
     if args.shift_output_file is not None:
-        a.output_shiftlist(args.shift_output_file, args.shift_output_type,
+        assigner.output_shiftlist(args.shift_output_file, args.shift_output_type,
                            confidence_list=args.shift_output_confidence)
 
     #### Make some plots
     plots = []
     if args.hsqc_plot_file is not None:
-        hsqc_plot = a.plot_hsqc(args.hsqc_plot_file, "html")
+        hsqc_plot = assigner.plot_hsqc(args.hsqc_plot_file, "html")
         logger.info("Finished writing HSQC plot to %s", args.hsqc_plot_file)
         plots += [hsqc_plot]
 
     if args.strip_plot_file is not None:
-        strip_plot = a.plot_strips(args.strip_plot_file, "html")
+        strip_plot = assigner.plot_strips(args.strip_plot_file, "html")
         logger.info("Finished writing strip plot to %s", args.strip_plot_file)
         plots += [strip_plot]
 

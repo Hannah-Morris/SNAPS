@@ -1,0 +1,46 @@
+BMRB code 27143
+alpha fold model AF-O75569-F1-model_v4
+
+SP:O75569-2 PRKRA_HUMAN Isoform 2 of Interferon-inducible
+double-stranded RNA-dependent protein kinase activator A
+
+blast
+p3a                              GPAMTDYIQLLSEIAKEQGFNITYLDIDELSANG
+                                     ::::::::::::::::::::::::::::::
+SP:O75 HSLGCTWHSLRNSPGEKINLLKRSLLSIPNTDYIQLLSEIAKEQGFNITYLDIDELSANG
+           190       200       210       220       230       240
+
+           40        50        60        70
+p3a    QYQCRAELSTSPITVCHGSGISCGNAQSDAAHNALQYLKIIAERK
+       :::: ::::::::::::::::::::::::::::::::::::::::
+SP:O75 QYQCLAELSTSPITVCHGSGISCGNAQSDAAHNALQYLKIIAERK
+           250       260       270       280
+
+nef
+
+235   GLY   start    non sequence
+236   PRO   middle   non sequence
+237   ALA   middle   non dequence
+238   MET   middle
+239   THR   middle
+240   ASP   middle
+241   TYR   middle
+242   ILE   middle
+243   GLN   middle
+244   LEU   middle
+245   LEU   middle
+246   SER   middle
+247   GLU   middle
+
+shiftx2
+
+28,I extra native sequence
+29,P extra native sequence
+30,N extra native sequence
+31,T
+32,D
+33,Y
+34,I
+
+offset between shiftx and biological construct 242 - 34  = 208
+

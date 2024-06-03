@@ -1,0 +1,188 @@
+data_fasta
+
+save_nef_nmr_meta_data
+   _nef_nmr_meta_data.sf_category      nef_nmr_meta_data
+   _nef_nmr_meta_data.sf_framecode     nef_nmr_meta_data
+   _nef_nmr_meta_data.format_name      nmr_exchange_format
+   _nef_nmr_meta_data.format_version   1.1
+   _nef_nmr_meta_data.program_name     NEFPipelines
+   _nef_nmr_meta_data.script_name      sparky/import/shifts.py
+   _nef_nmr_meta_data.program_version  0.1.30
+   _nef_nmr_meta_data.creation_date    2023-03-20T12:03:14.300150
+   _nef_nmr_meta_data.uuid             NEFPipelines-2023-03-20T12:03:14.354187-5405910438
+   _nef_nmr_meta_data.creation_time    2023-03-20T12:03:14.354187
+
+   loop_
+      _nef_run_history.run_number
+      _nef_run_history.program_name
+      _nef_run_history.program_version
+      _nef_run_history.script_name
+
+     1   NEFPipelines   0.1.30   fasta/import/sequence.py
+
+   stop_
+
+save_
+
+save_nef_molecular_system
+   _nef_molecular_system.sf_category   nef_molecular_system
+   _nef_molecular_system.sf_framecode  nef_molecular_system
+
+   loop_
+      _nef_sequence.index
+      _nef_sequence.chain_code
+      _nef_sequence.sequence_code
+      _nef_sequence.residue_name
+      _nef_sequence.linking
+      _nef_sequence.residue_variant
+      _nef_sequence.cis_peptide
+
+     7    A   241   TYR   middle   .   .
+     8    A   242   ILE   middle   .   .
+     9    A   243   GLN   middle   .   .
+     10   A   244   LEU   middle   .   .
+     11   A   245   LEU   middle   .   .
+     12   A   246   SER   middle   .   .
+     13   A   247   GLU   middle   .   .
+     14   A   248   ILE   middle   .   .
+     15   A   249   ALA   middle   .   .
+     16   A   250   LYS   middle   .   .
+     17   A   251   GLU   middle   .   .
+        stop_
+
+save_
+
+save_nef_chemical_shift_list_default
+   _nef_chemical_shift_list.sf_category   nef_chemical_shift_list
+   _nef_chemical_shift_list.sf_framecode  nef_chemical_shift_list_default
+
+   loop_
+      _nef_chemical_shift.chain_code
+      _nef_chemical_shift.sequence_code
+      _nef_chemical_shift.residue_name
+      _nef_chemical_shift.atom_name
+      _nef_chemical_shift.value
+      _nef_chemical_shift.value_uncertainty
+      _nef_chemical_shift.element
+      _nef_chemical_shift.isotope_number
+
+     A   241   TYR   C      177.245   .   C   13
+     A   241   TYR   CA     61.138    .   C   13
+     A   241   TYR   CB     38.558    .   C   13
+     A   241   TYR   H      7.637     .   H   1
+     A   241   TYR   HA     4.117     .   H   1
+     A   241   TYR   HB2    2.916     .   H   1
+     A   241   TYR   HB3    3.09      .   H   1
+     A   241   TYR   N      122.983   .   N   15
+     A   242   ILE   C      179.489   .   C   13
+     A   242   ILE   CA     65.162    .   C   13
+     A   242   ILE   CB     37.949    .   C   13
+     A   242   ILE   CD1    13.347    .   C   13
+     A   242   ILE   CG1    29.456    .   C   13
+     A   242   ILE   CG2    16.371    .   C   13
+     A   242   ILE   H      8.041     .   H   1
+     A   242   ILE   HA     3.619     .   H   1
+     A   242   ILE   HB     1.925     .   H   1
+     A   242   ILE   HG12   0.983     .   H   1
+     A   242   ILE   HG13   1.605     .   H   1
+     A   242   ILE   N      118.682   .   N   15
+     A   242   ILE   QD1    0.678     .   H   1
+     A   242   ILE   QG2    0.871     .   H   1
+     A   243   GLN   C      179.03    .   C   13
+     A   243   GLN   CA     58.581    .   C   13
+     A   243   GLN   CB     28.129    .   C   13
+     A   243   GLN   CD     179.781   .   C   13
+     A   243   GLN   CG     33.471    .   C   13
+     A   243   GLN   H      7.864     .   H   1
+     A   243   GLN   HA     4.029     .   H   1
+     A   243   GLN   HB2    1.977     .   H   1
+     A   243   GLN   HB3    2.015     .   H   1
+     A   243   GLN   HE21   7.82      .   H   1
+     A   243   GLN   HE22   6.783     .   H   1
+     A   243   GLN   HG2    2.357     .   H   1
+     A   243   GLN   N      121.655   .   N   15
+     A   243   GLN   NE2    112.694   .   N   15
+     A   244   LEU   C      179.424   .   C   13
+     A   244   LEU   CA     58.229    .   C   13
+     A   244   LEU   CB     42.004    .   C   13
+     A   244   LEU   CD1    23.878    .   C   13
+     A   244   LEU   CD2    24.739    .   C   13
+     A   244   LEU   CG     26.994    .   C   13
+     A   244   LEU   H      8.337     .   H   1
+     A   244   LEU   HA     4.139     .   H   1
+     A   244   LEU   HB2    1.67      .   H   1
+     A   244   LEU   HB3    1.742     .   H   1
+     A   244   LEU   HG     1.659     .   H   1
+     A   244   LEU   N      120.86    .   N   15
+     A   244   LEU   QD1    0.914     .   H   1
+     A   244   LEU   QD2    0.921     .   H   1
+     A   245   LEU   C      177.972   .   C   13
+     A   245   LEU   CA     58.085    .   C   13
+     A   245   LEU   CB     40.936    .   C   13
+     A   245   LEU   CD1    22.932    .   C   13
+     A   245   LEU   CD2    26.529    .   C   13
+     A   245   LEU   CG     26.98     .   C   13
+     A   245   LEU   H      8.566     .   H   1
+     A   245   LEU   HA     4.204     .   H   1
+     A   245   LEU   HB2    1.501     .   H   1
+     A   245   LEU   HB3    2.173     .   H   1
+     A   245   LEU   HG     1.798     .   H   1
+     A   245   LEU   N      119.145   .   N   15
+     A   245   LEU   QD1    1.017     .   H   1
+     A   245   LEU   QD2    1.084     .   H   1
+     A   246   SER   C      177.101   .   C   13
+     A   246   SER   CA     61.766    .   C   13
+     A   246   SER   CB     62.695    .   C   13
+     A   246   SER   H      7.905     .   H   1
+     A   246   SER   HA     4.064     .   H   1
+     A   246   SER   HB2    4.016     .   H   1
+     A   246   SER   HB3    4.076     .   H   1
+     A   246   SER   N      114.314   .   N   15
+     A   247   GLU   C      179.523   .   C   13
+     A   247   GLU   CA     59.293    .   C   13
+     A   247   GLU   CB     29.274    .   C   13
+     A   247   GLU   CG     36.222    .   C   13
+     A   247   GLU   H      7.889     .   H   1
+     A   247   GLU   HA     4.067     .   H   1
+     A   247   GLU   HB2    2.113     .   H   1
+     A   247   GLU   HB3    2.283     .   H   1
+     A   247   GLU   HG2    2.296     .   H   1
+     A   247   GLU   HG3    2.469     .   H   1
+     A   247   GLU   N      122.251   .   N   15
+     A   248   ILE   C      177.569   .   C   13
+     A   248   ILE   CA     63.464    .   C   13
+     A   248   ILE   CB     37.11     .   C   13
+     A   248   ILE   CD1    11.684    .   C   13
+     A   248   ILE   CG1    28.395    .   C   13
+     A   248   ILE   CG2    17.726    .   C   13
+     A   248   ILE   H      8.033     .   H   1
+     A   248   ILE   HA     3.808     .   H   1
+     A   248   ILE   HB     2.059     .   H   1
+     A   248   ILE   HG12   1.547     .   H   1
+     A   248   ILE   N      122.227   .   N   15
+     A   248   ILE   QD1    0.833     .   H   1
+     A   248   ILE   QG2    1.012     .   H   1
+     A   249   ALA   C      179.917   .   C   13
+     A   249   ALA   CA     54.833    .   C   13
+     A   249   ALA   CB     18.878    .   C   13
+     A   249   ALA   H      8.438     .   H   1
+     A   249   ALA   HA     2.051     .   H   1
+     A   249   ALA   N      123.367   .   N   15
+     A   249   ALA   QB     1.118     .   H   1
+     A   250   LYS   C      179.208   .   C   13
+     A   250   LYS   CA     58.773    .   C   13
+     A   250   LYS   CB     32.314    .   C   13
+     A   250   LYS   CD     29.223    .   C   13
+     A   250   LYS   CE     42.125    .   C   13
+     A   250   LYS   CG     24.864    .   C   13
+     A   250   LYS   H      7.348     .   H   1
+     A   250   LYS   HA     3.951     .   H   1
+     A   250   LYS   HB2    1.898     .   H   1
+     A   250   LYS   HD2    1.671     .   H   1
+     A   250   LYS   HE2    2.955     .   H   1
+     A   250   LYS   HG2    1.399     .   H   1
+     A   250   LYS   HG3    1.558     .   H   1
+     A   250   LYS   N      116.377   .   N   15
+   stop_
+save_
+

@@ -1,0 +1,4 @@
+SS_name  AA Type   #Offset
+#244Leu   L     in  #-1
+#245Leu   A     in  #-1
+241Tyr    Q     in

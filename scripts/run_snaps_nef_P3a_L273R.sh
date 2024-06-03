@@ -1,0 +1,1 @@
+python/SNAPS.py data/P3a_L273R/P3a_L273R.nef  data/P3a_L273R/shiftx2.cs data/P3a_L273R/test_P3a_L273_nef.out --shift_type nef  -c config/config_yaml.txt -l data/P3a_L273R/nef_log.txt

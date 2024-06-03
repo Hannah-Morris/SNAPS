@@ -1,0 +1,18 @@
+14:49:55 INFO All required parameters imported
+14:49:55 INFO Finished reading in config parameters from config/config_yaml.txt
+14:49:55 INFO Finished reading in 78 spin systems from data/P3a_L273R/mars_shifts.txt
+14:49:55 INFO Imported 453 predicted chemical shifts from data/P3a_L273R/shiftx2.cs
+14:49:55 INFO 1 residues from the sequence were missing from the predictions
+14:49:55 INFO Finished reading in 78 predicted residues from data/P3a_L273R/shiftx2.cs
+14:49:55 INFO Removing 2 prolines from predictions
+14:49:55 INFO Restricted atom types to CB_m1,C_m1,C,H,HA,N,CB,CA_m1,CA
+14:49:55 INFO Added 2 dummy predicted residues
+14:49:55 INFO Imported delta_correlation info from config/d_mean.csv and config/d_cov.csv
+14:49:55 INFO Accounting for correlated prediction errors
+14:49:55 INFO Calculated log probability matrix (78x78)
+14:49:55 INFO Calculated mismatch and consistent_links matrixes (78x78)
+14:49:55 INFO Started linear assignment
+14:49:55 INFO Finished calculating best assignment based on predictions
+14:49:55 INFO Calculated assignment confidence: 71 High, 3 Undefined, 2 Unreliable, 2 Medium
+14:49:55 INFO Finished checking assignment consistency
+14:49:55 INFO Finished writing results to data/P3a_L273R/test_P3a_L273_mars.out

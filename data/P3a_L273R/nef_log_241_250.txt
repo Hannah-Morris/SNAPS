@@ -1,0 +1,9 @@
+12:04:45 INFO All required parameters imported
+12:04:45 INFO Finished reading in config parameters from ../config/config_yaml.txt
+12:04:45 INFO Finished reading in 10 spin systems from ../test_data/P3a_L273R_241_250.nef
+12:04:45 INFO Imported 60 predicted chemical shifts from ../test_data/P3a_L273R_241_250_shiftx2.cs
+12:04:45 INFO Finished reading in 10 predicted residues from ../test_data/P3a_L273R_241_250_shiftx2.cs
+12:04:45 INFO Removing 0 prolines from predictions
+12:04:45 INFO Restricted atom types to C,H,HA,CA,CB,N
+12:04:45 INFO Imported delta_correlation info from ../config/d_mean.csv and ../config/d_cov.csv
+12:04:45 INFO Accounting for correlated prediction errors

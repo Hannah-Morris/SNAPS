@@ -1,0 +1,20 @@
+data_aa_type_test
+    save_nefpls_residue_types_default
+        _nefpls.sf_category nefpls_residue_types
+        _nefpls.sf_framecode nefpls_residue_types_default
+
+        loop_
+            _nefpls_residue_type.index
+            _nefpls_residue_type.chain_code
+            _nefpls_residue_type.sequence_code
+            _nefpls_residue_type.residue_type
+            _nefpls_residue_type.probability
+            1  @-  @237Ala   ALA   .
+            2  @-  @237Ala   VAL   .
+            3  @-  @237Ala   ILE   .
+            4  @-  @238Met   ALA   .
+            5  @-  @238Met   VAL   .
+            6  @-  @238Met   ILE   .
+        stop_
+    save_
+

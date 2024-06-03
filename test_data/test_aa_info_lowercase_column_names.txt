@@ -1,0 +1,3 @@
+ss_name  aa    type
+237Ala   AVI   in
+238Met   AVI   ex

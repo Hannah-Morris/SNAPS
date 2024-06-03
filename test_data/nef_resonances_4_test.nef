@@ -1,0 +1,103 @@
+data_fasta
+
+save_nef_nmr_meta_data
+   _nef_nmr_meta_data.sf_category      nef_nmr_meta_data
+   _nef_nmr_meta_data.sf_framecode     nef_nmr_meta_data
+   _nef_nmr_meta_data.format_name      nmr_exchange_format
+   _nef_nmr_meta_data.format_version   1.1
+   _nef_nmr_meta_data.program_name     NEFPipelines
+   _nef_nmr_meta_data.script_name      sparky/import/shifts.py
+   _nef_nmr_meta_data.program_version  0.1.30
+   _nef_nmr_meta_data.creation_date    2023-03-20T12:03:14.300150
+   _nef_nmr_meta_data.uuid             NEFPipelines-2023-03-20T12:03:14.354187-5405910438
+   _nef_nmr_meta_data.creation_time    2023-03-20T12:03:14.354187
+
+   loop_
+      _nef_run_history.run_number
+      _nef_run_history.program_name
+      _nef_run_history.program_version
+      _nef_run_history.script_name
+
+     1   NEFPipelines   0.1.30   fasta/import/sequence.py    
+
+   stop_
+
+save_
+
+save_nef_molecular_system
+   _nef_molecular_system.sf_category   nef_molecular_system
+   _nef_molecular_system.sf_framecode  nef_molecular_system
+
+   loop_
+      _nef_sequence.index
+      _nef_sequence.chain_code
+      _nef_sequence.sequence_code
+      _nef_sequence.residue_name
+      _nef_sequence.linking
+      _nef_sequence.residue_variant
+      _nef_sequence.cis_peptide
+
+     1    A   235   GLY   start    .   .    
+     2    A   236   PRO   middle   .   .    
+     3    A   237   ALA   middle   .   .    
+     4    A   238   MET   middle   .   .    
+     5    A   239   THR   END      .   .    
+   stop_
+
+save_
+
+save_nef_chemical_shift_list_default
+   _nef_chemical_shift_list.sf_category   nef_chemical_shift_list
+   _nef_chemical_shift_list.sf_framecode  nef_chemical_shift_list_default
+
+   loop_
+      _nef_chemical_shift.chain_code
+      _nef_chemical_shift.sequence_code
+      _nef_chemical_shift.residue_name
+      _nef_chemical_shift.atom_name
+      _nef_chemical_shift.value
+      _nef_chemical_shift.value_uncertainty
+      _nef_chemical_shift.element
+      _nef_chemical_shift.isotope_number
+
+     A   236   PRO   C      176.443   .   C   13    
+     A   236   PRO   CA     62.822    .   C   13    
+     A   236   PRO   CB     32.269    .   C   13    
+     A   236   PRO   CD     49.668    .   C   13    
+     A   236   PRO   CG     27.035    .   C   13    
+     A   236   PRO   HA     4.438     .   H   1     
+     A   236   PRO   HB2    1.918     .   H   1     
+     A   236   PRO   HB3    2.271     .   H   1     
+     A   236   PRO   HD2    3.541     .   H   1     
+     A   236   PRO   HG2    1.967     .   H   1     
+     A   237   ALA   C      177.765   .   C   13    
+     A   237   ALA   CA     52.387    .   C   13    
+     A   237   ALA   CB     19.145    .   C   13    
+     A   237   ALA   H      8.549     .   H   1     
+     A   237   ALA   HA     4.277     .   H   1     
+     A   237   ALA   N      124.638   .   N   15    
+     A   237   ALA   QB     1.357     .   H   1     
+     A   238   MET   C      175.895   .   C   13    
+     A   238   MET   CA     55.484    .   C   13    
+     A   238   MET   CB     32.904    .   C   13    
+     A   238   MET   CG     31.928    .   C   13    
+     A   238   MET   H      8.379     .   H   1     
+     A   238   MET   HA     4.412     .   H   1     
+     A   238   MET   HB2    1.956     .   H   1     
+     A   238   MET   HB3    2.018     .   H   1     
+     A   238   MET   HG2    2.505     .   H   1     
+     A   238   MET   HG3    2.565     .   H   1     
+     A   238   MET   N      119.821   .   N   15    
+     A   239   THR   C      173.036   .   C   13    
+     A   239   THR   CA     62.028    .   C   13    
+     A   239   THR   CB     69.456    .   C   13    
+     A   239   THR   CG2    21.778    .   C   13    
+     A   239   THR   H      7.887     .   H   1     
+     A   239   THR   HA     3.882     .   H   1     
+     A   239   THR   HB     3.664     .   H   1     
+     A   239   THR   N      115.463   .   N   15    
+     A   239   THR   QG2    0.815     .   H   1     
+   stop_
+
+save_
+

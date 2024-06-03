@@ -24,12 +24,12 @@ atom_sd: # Atom standard deviations. Don't change indentation.
 iterate_until_consistent:       False   # If True, iteratively enforce consistent links for High and Medium confidence assignments
 seq_link_threshold:      0.2     # Maximum allowed carbon shift difference (in ppm) between adjacent residues to count as a good sequential link.
 delta_correlation:       True   # Account for correlations in prediction errors
-delta_correlation_mean_file:     ../config/d_mean.csv       # File containing mean prediction errors
-delta_correlation_cov_file:      ../config/d_cov.csv        # File containing covariances between the prediction errors
+delta_correlation_mean_file:     d_mean.csv       # File containing mean prediction errors
+delta_correlation_cov_file:      d_cov.csv        # File containing covariances between the prediction errors
 pred_correction:        False   # Apply a linear correction to the predicted shifts
-pred_correction_file:      ../config/lin_model_shiftx2.csv    # File containing parameters for linear correction to predicted shift
-delta_correlation_mean_corrected_file:     ../config/dd_mean.csv       # File containing mean prediction errors, assuming the predictions have been corrected
-delta_correlation_cov_corrected_file:      ../config/dd_cov.csv        # File containing covariances between the prediction errors, assuming the predictions have been corrected
+pred_correction_file:      lin_model_shiftx2.csv    # File containing parameters for linear correction to predicted shift
+delta_correlation_mean_corrected_file:     dd_mean.csv       # File containing mean prediction errors, assuming the predictions have been corrected
+delta_correlation_cov_corrected_file:      dd_cov.csv        # File containing covariances between the prediction errors, assuming the predictions have been corrected
 
 #May want to add more parameters to control generation of alternative assignments
 #alt_assignments: 0       # Number of alternative assignments to generate

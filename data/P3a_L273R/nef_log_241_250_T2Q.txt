@@ -1,0 +1,15 @@
+13:41:26 INFO All required parameters imported
+13:41:26 INFO Finished reading in config parameters from ../config/config_yaml.txt
+13:41:26 INFO Finished reading in 10 spin systems from ../test_data/P3a_L273R_241_250.nef
+13:41:26 INFO Imported 60 predicted chemical shifts from ../test_data/P3a_L273R_241_250_shiftx2.cs
+13:41:26 INFO Finished reading in 10 predicted residues from ../test_data/P3a_L273R_241_250_shiftx2.cs
+13:41:26 INFO Removing 0 prolines from predictions
+13:41:26 INFO Restricted atom types to CB,CA,C,H,HA,N
+13:41:26 INFO Imported delta_correlation info from ../config/d_mean.csv and ../config/d_cov.csv
+13:41:26 INFO Accounting for correlated prediction errors
+13:41:26 INFO Calculated log probability matrix (10x10)
+13:41:26 WARNING No sequential links in data - mismatch matrix not calculated.
+13:41:26 INFO Started linear assignment
+13:41:26 INFO Finished calculating best assignment based on predictions
+13:41:26 WARNING Couldn't calculate assignment confidence: need sequential atom information
+13:41:26 INFO Finished writing results to ../test_data/test_P3a_L273_241_250_T2Q_nef.out

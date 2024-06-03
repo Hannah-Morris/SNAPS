@@ -4,3 +4,11 @@
 /python/__pycache__/*
 *.pyc
 *.pyo
+/.idea/vcs.xml
+/python/.coverage
+/.coverage
+/.idea/misc.xml
+/.idea/SNAPS.iml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml

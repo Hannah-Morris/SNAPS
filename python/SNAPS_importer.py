@@ -4,22 +4,26 @@ Defines a class with functions related to importing peak lists and shift lists.
 
 @author: Alex
 """
-
-import numpy as np
+from pynmrstar import Entry
 import pandas as pd
-import itertools
-from pathlib import Path
 from Bio.SeqUtils import seq1
 from math import sqrt
-#import nmrstarlib
+
+from NEF_reader import read_nef_shifts_from_file_to_pandas, TRANSLATIONS_3_1_PROTEIN
+
+POSSIBLE_1LET_AAS_STR = "ACDEFGHIKLMNPQRSTVWY"
+
+class SnapsImportException(Exception):
+    ...
+# import nmrstarlib
 
 class SNAPS_importer:
     # Attributes
-#    peaklists = {}
-#    assignments = {}
-#    roots = None
-#    peaks = None
-#    obs = None
+    #    peak lists = {}
+    #    assignments = {}
+    #    roots = None
+    #    peaks = None
+    #    obs = None
     
     def __init__(self):
         self.peaklists = {}
@@ -41,7 +45,7 @@ class SNAPS_importer:
             hsqc.columns = ["SS_name","H","N","Height"]      
             #hsqc.index = hsqc["SS_name"]
         elif filetype=="sparky":
-            hsqc = pd.read_table(filename, sep="\s+")
+            hsqc = pd.read_table(filename, sep=r"\s+")
             hsqc.columns = ["SS_name","H","N","Height"]
             # If assigned, Name has format "A123HN-A123N"
             # If unassigned, Name column contains "?-?"
@@ -55,7 +59,7 @@ class SNAPS_importer:
                     pd.Series(range(N_unassigned)).astype(str))
             
         elif filetype=="xeasy":
-            hsqc = pd.read_table(filename, sep="\s+", comment="#", header=None,
+            hsqc = pd.read_table(filename, sep=r"\s+", comment="#", header=None,
                                  usecols=[0,1,2,5], 
                                  names=["SS_name","H","N","Height"])
             hsqc["SS_name"] = "x" + hsqc["SS_name"].astype(str)
@@ -67,7 +71,7 @@ class SNAPS_importer:
                         colnames_line = num
                         colnames = line.split()[1:]
             
-            hsqc = pd.read_table(filename, sep="\s+", skiprows=colnames_line+1,
+            hsqc = pd.read_table(filename, sep=r"\s+", skiprows=colnames_line+1,
                                 names=colnames)
             hsqc = hsqc[["INDEX", "ASS", "X_PPM", "Y_PPM", "HEIGHT"]]
             hsqc.columns = ["ID", "SS_name", "H", "N", "Height"]
@@ -114,13 +118,13 @@ class SNAPS_importer:
                                            "Height"])
             peaks.columns = ["F1","F2","F3","A1","A2","A3","Height"]
         elif filetype == "sparky":
-            peaks = pd.read_table(filename, sep="\s+")
+            peaks = pd.read_table(filename, sep=r"\s+")
             peaks.columns=["Name","F1","F2","F3","Height"]
             peaks["A1"], peaks["A2"], peaks["A3"] = list(zip(
                                                 *peaks["Name"].str.split("-")))
             #return(peaks)
         elif filetype == "xeasy":
-            peaks = pd.read_table(filename, sep="\s+", comment="#", header=None,
+            peaks = pd.read_table(filename, sep=r"\s+", comment="#", header=None,
                                  usecols=[1,2,3,6], 
                                  names=["F1","F2","F3","Height"])
             peaks["SS_name"] = None
@@ -132,7 +136,7 @@ class SNAPS_importer:
                         colnames_line = num
                         colnames = line.split()[1:]
                         
-            peaks = pd.read_table(filename, sep="\s+", skiprows=colnames_line+1,
+            peaks = pd.read_table(filename, sep=r"\s+", skiprows=colnames_line+1,
                                 names=colnames)
             peaks = peaks[["ASS", "X_PPM", "Y_PPM", "Z_PPM", "HEIGHT"]]
             peaks.columns = ["SS_name", "F1", "F2", "F3", "Height"]
@@ -328,12 +332,12 @@ class SNAPS_importer:
             obs.columns = ["SS_name", "Atom_type", "Shift"]
             obs["Atom_type"] = obs["Atom_type"].str.upper()
         elif filetype=="sparky":
-            obs = pd.read_table(filename, sep="\s+")
+            obs = pd.read_table(filename, sep=r"\s+")
             obs = obs.loc[:,["Group", "Atom", "Shift"]]
             obs.columns = ["SS_name", "Atom_type", "Shift"]
             obs.loc[obs["Atom_type"]=="HN", "Atom_type"] = "H"
         elif filetype=="xeasy":
-            obs = pd.read_table(filename, sep="\s+", 
+            obs = pd.read_table(filename, sep=r"\s+",
                                 header=None, na_values="999.000",
                                 names=["i","Shift","SD","Atom_type","SS_name"])
             obs = obs.loc[:, ["SS_name", "Atom_type", "Shift"]]
@@ -344,16 +348,16 @@ class SNAPS_importer:
             # Work out where the column names and data are
             with open(filename, 'r') as f:
                 for num, line in enumerate(f, 1):
-                    if line.find("VARS")>-1:
+                    if line.find("VARS") > -1:
                         colnames_line = num
             
-            obs = pd.read_table(filename, sep="\s+", skiprows=colnames_line+1, 
+            obs = pd.read_table(filename, sep=r"\s+", skiprows=colnames_line+1,
                                 names=["SS_name","Res_type","Atom_type","Shift"])
             obs = obs.loc[:, ["SS_name", "Atom_type", "Shift"]]
             obs["SS_name"] = obs["SS_name"].astype(str)
-            obs.loc[obs["Atom_type"]=="HN", "Atom_type"] = "H"
-        elif filetype=="mars":
-            obs_wide = pd.read_table(filename, sep="\s+", na_values="-")
+            obs.loc[obs["Atom_type"] == "HN", "Atom_type"] = "H"
+        elif filetype == "mars":
+            obs_wide = pd.read_table(filename, sep=r"\s+", na_values="-")
             obs_wide = obs_wide.rename(columns={"CO":"C","CO-1":"C_m1",
                                                 "CA-1":"CA_m1","CB-1":"CB_m1"})
             obs_wide = obs_wide.drop(columns="HA-1")
@@ -362,7 +366,9 @@ class SNAPS_importer:
                                 value_vars=["H","HA","N","C","CA",
                                             "CB","C_m1","CA_m1","CB_m1"], 
                                 var_name="Atom_type", value_name="Shift")
-            
+        elif filetype =='nef':
+            obs = read_nef_shifts_from_file_to_pandas(filename)
+
 #        elif filetype == "nmrstar":
 #            tmp = nmrstarlib.read_files(filename)
 #            return(tmp)
@@ -383,7 +389,7 @@ class SNAPS_importer:
             obs["Res_N"] = obs["SS_name"].str.extract(r"(\d+)").astype(int)
             
             obs.index = obs["Res_N"]
-            obs_m1 = obs[list({"C","CA","CB"}.intersection(obs.columns))]
+            obs_m1 = obs[list({"C", "CA", "CB"}.intersection(obs.columns))]
             obs_m1.index = obs_m1.index+1
             obs_m1.columns = obs_m1.columns + "_m1"
             obs = pd.merge(obs, obs_m1, how="left", 
@@ -393,62 +399,245 @@ class SNAPS_importer:
             # Set index back to SS_name
             obs.index = obs["SS_name"]
             obs.index.name = None
-              
+
+        # the index name shouldn't match a column name!
+        obs.index.name = None
         self.obs = obs
-        return(self.obs)
-    
-    def import_aa_type_info(self, filename, offset="i-1"):
-        """ Add amino acid type information to previously-imported observed 
+        return self.obs
+
+    def import_aa_type_info_nef(self, entry: Entry, frame_name: str):
+        """ Add amino acid type information to previously-imported observed
         shifts
-        
-        filename: a file with amino acid information
-            This should have the format:
+
+        entry: a pynmrstar Entry object containing amino acid information
+        offset: either "i" or "i-1". Whether the aa type restriction
+        frame_name: the name of the NEF frame with the restraints in it
+        applies to the i spin system or to the preceeding i-1 spin system.
+        """
+        def is_int(str):
+            result = True
+            try:
+                int(str)
+            except Exception:
+                result = False
+            return result
+
+        RESIDUE_TYPES_FRAME = 'nefpls_residue_types'
+        RESIDUE_TYPES_TAG = '_nefpls_residue_type'
+        REQUIRED_TAG_SET = set([f'{RESIDUE_TYPES_TAG}.{tag}' for tag in 'chain_code sequence_code residue_type'.split()])
+        LEN_RESIDUE_TYPES = len(RESIDUE_TYPES_FRAME)
+        frames = entry.get_saveframes_by_category('nefpls_residue_types')
+        frames = [frame for frame in frames if frame.name[LEN_RESIDUE_TYPES:].strip('_') == frame_name]
+
+        restraints = {}
+
+        for frame in frames:
+            if RESIDUE_TYPES_TAG in frame:
+                loop = frame.get_loop(RESIDUE_TYPES_TAG)
+
+                if not REQUIRED_TAG_SET.issubset(loop.get_tag_names()):
+                    missing_tags = REQUIRED_TAG_SET - set(loop.get_tag_names())
+                    msg = \
+                    f"""
+                        Missing required tags in the frame {frame_name} {missing_tags}, the missing tags are:
+                        {missing_tags}
+                    """
+                    raise SnapsImportException(msg)
+
+                chain_code_index = loop.tag_index('chain_code')
+                sequence_code_index = loop.tag_index('sequence_code')
+                residue_type_index = loop.tag_index('residue_type')
+
+                for row in loop:
+                    chain_code = row[chain_code_index]
+                    sequence_code = row[sequence_code_index]
+                    residue_type = row[residue_type_index]
+
+                    if not chain_code[0] in ['@', '#']:
+                        continue
+
+                    if not sequence_code[0] == '@':
+                        continue
+
+                    chain_code = chain_code[1:]
+                    sequence_code = sequence_code[1:]
+
+                    sequence_code_offset = 0
+                    if not isinstance(sequence_code, int) and '-' in sequence_code:
+                        sequence_code_fields =  sequence_code.split('-')
+                        if is_int(sequence_code[-1]):
+                            sequence_code_offset = int(sequence_code_fields[:-1])
+                            sequence_code = '-'.join(sequence_code_fields[:-1])
+
+                    # TODO: we should select a chain!
+                    ss_name = f'{sequence_code}'
+
+
+                    if residue_type in TRANSLATIONS_3_1_PROTEIN:
+                        residue_type = TRANSLATIONS_3_1_PROTEIN[residue_type]
+                    else:
+                        msg = \
+                        f"""
+                            Non protein residue type {residue_type} in frame {frame_name}
+                        """
+                        raise SnapsImportException(msg)
+
+
+                    key = ss_name, sequence_code_offset
+                    residue_types = restraints.setdefault(key, '')
+                    residue_types += residue_type
+                    restraints[key] = residue_types
+
+
+        residue_restraints = [[ss, residue_types, 'in', offset] for (ss, offset), residue_types in restraints.items()]
+        residue_type_frame = pd.DataFrame(residue_restraints, columns='SS_name AA Type Offset'.split())
+
+        return self._import_aa_type_info(residue_type_frame, source=f'{entry.entry_id}.{frame_name}')
+
+    def import_aa_type_info_file(self, file_name):
+        """ Add amino acid type information to previously-imported observed
+        shifts
+
+        file_name: Path to a file containing amino acid information
+            This should have the following columns:
+            SS_name   AVI     in   Offset
             SS_name_1   AVI   in   # to set AVI as the only allowed aa types
             SS_name_2   T     ex   # to exclude T from the allowed aa types
-        offset: either "i" or "i_minus_1". Whether the aa type restriction 
+        """
+        # Import file
+        df = pd.read_table(file_name, sep=r"\s+", comment="#", header=0)
+
+        if 'Offset' not in df.columns:
+            df['Offset'] = 0
+
+        return self._import_aa_type_info(df, file_name)
+
+    def _import_aa_type_info(self, aa_info_df, source):
+        """ Add amino acid type information to previously-imported observed 
+        shifts
+
+        source: a pandas data frame with amino acid information
+            This should have the following columns:
+            SS_name_1   AVI   in   # to set AVI as the only allowed aa types
+            SS_name_2   T     ex   # to exclude T from the allowed aa types
+            offset: either "i" or "i-1". Whether the aa type restriction
             applies to the i spin system or to the preceeding i-1 spin system.
         """
-        AA_str = "ACDEFGHIKLMNPQRSTVWY"
-        
-        if offset=="i":
-            col = "SS_class"
-        elif offset=="i-1":
-            col = "SS_class_m1"
+        self.check_required_headings_and_raise_if_bad(aa_info_df, source)
+        self.check_aa_letters_correct_and_raise_if_bad(aa_info_df)
+        self.check_type_column_categories_and_raise_if_bad(aa_info_df)
+
+        if 'Offset' in aa_info_df.columns:
+            self._check_bad_offset_raise_if_bad(aa_info_df)
+
+            result_df_0 = aa_info_df[aa_info_df['Offset'] == 0]
+            self._process_aa_type_info_single_offset(result_df_0, 0)
+
+            result_df_m1 = aa_info_df[aa_info_df['Offset'] == -1]
+            self._process_aa_type_info_single_offset(result_df_m1, -1)
         else:
-            print("invalid value of offset: must be 'i' or 'i-1'.")
-            return(None)
-        
-        # Import file
-        df = pd.read_table(filename, sep="\s+", comment="#", 
-                                    header=None, names=["SS_name","AA","Type"])
-        
+            self._process_aa_type_info_single_offset(aa_info_df, 0)
+        return self.obs
+
+    def _check_bad_offset_raise_if_bad(self, aa_info_df):
+        result_df_other = aa_info_df[(aa_info_df['Offset'] != 0) & (aa_info_df['Offset'] != -1)]
+        msg = 'offset can only be 0 or -1'
+        if len(result_df_other.index):
+            raise SnapsImportException(msg)
+
+    def _process_aa_type_info_single_offset(self, aa_info_df, offset):
+        if offset == 0:
+            ss_class_col = "SS_class"
+        elif offset == -1:
+            ss_class_col = "SS_class_m1"
+        else:
+            raise SnapsImportException(f"in import_aa_type_info invalid value of offset: must be 0 or -1 i got "
+                                       f"{offset}")
+
+        # puts aa into ss class column
+        aa_info_df[ss_class_col] = aa_info_df["AA"]
+
+        self.check_spin_systems_from_obs_raise_if_bad(aa_info_df)
+
         # For rows with Type=="in", the SS_class is the same as AA
         # For rows with Type=="ex", the SS_class is all aminos *except* AA
-        df[col] = df["AA"]
-        mask = (df["Type"]=="ex")
-        for i in df.index[mask]:
-            tmp = AA_str
-            for c in df.loc[i, "AA"]:
-                tmp = tmp.replace(c, "")
-            df.loc[i, col] = tmp
-        
-        df.index = df["SS_name"]
-        
+
+        ex_mask = (aa_info_df["Type"] == "ex")
+        for row_index in aa_info_df.index[ex_mask]:
+            expected_aas = POSSIBLE_1LET_AAS_STR
+            for aa_1let in aa_info_df.loc[row_index, "AA"]:
+                expected_aas = expected_aas.replace(aa_1let, "")
+            aa_info_df.loc[row_index, ss_class_col] = expected_aas
+        aa_info_df.index = aa_info_df["SS_name"]
+
         # Create SS_class column in obs DataFrame if it doesn't already exist.
-        if col not in self.obs.columns:
-            self.obs[col] = AA_str
-        
-        # Write SS_class info into obs data frame. Overwrite any previous info 
-        # for these spin systems, but keep SS_class info for any spin systems 
+
+        if ss_class_col not in self.obs.columns:
+            self.obs[ss_class_col] = POSSIBLE_1LET_AAS_STR
+        # else:
+        #     raise SnapsImportException("SS_class column needs to be present in the Obs DataFrame")
+
+        # Write SS_class info into obs data frame. Overwrite any previous info
+        # for these spin systems, but keep SS_class info for any spin systems
         # not in df
-        self.obs.loc[df.index, col] = df.loc[:, col]
-       
+        self.obs.loc[aa_info_df.index, ss_class_col] = aa_info_df.loc[:, ss_class_col]
+
         # Nan's can be any amino acid
-        self.obs[col] = self.obs[col].fillna(AA_str)
-        
-        return(self.obs)
-    
-    def import_testset_shifts(self, filename, remove_Pro=True, 
+        self.obs[ss_class_col] = self.obs[ss_class_col].fillna(POSSIBLE_1LET_AAS_STR)
+
+    def check_spin_systems_from_obs_raise_if_bad(self, aa_info_df):
+        expected_obs = set()
+        if 'SS_name' in self.obs.columns:
+            expected_obs.update(set(self.obs['SS_name']))
+        if 'SS_name_m1' in self.obs.columns:
+            expected_obs.update(set(self.obs['SS_name_m1']))
+        given_obs = [elem in expected_obs for elem in aa_info_df['SS_name']]
+        if not all(given_obs):
+            msg = "Incorrect data given, unexpected spin system in aa types. the input spin systems should " \
+                  "be in the chemical shift list"
+            raise SnapsImportException(msg)
+
+        # puts aa into ss class column
+
+    def check_aa_letters_correct_and_raise_if_bad(self, aa_info_df):
+
+        expected_1let_aa_set = set(POSSIBLE_1LET_AAS_STR)
+        all_aa_1lets_ok = [set(elem).issubset(expected_1let_aa_set) for elem in aa_info_df['AA']]
+
+        if not all(all_aa_1lets_ok):
+            msg = "AA type letters incorrect, Amino Acid letters can only be: 'ACDEFGHIKLMNPQRSTVWY'"
+            raise SnapsImportException(msg)
+
+    def check_type_column_categories_and_raise_if_bad(self, aa_info_df):
+
+        ex_mask = (aa_info_df["Type"] == "ex")
+        in_mask = (aa_info_df["Type"] == "in")
+        expected_type_column = ex_mask ^ in_mask
+        if not all(expected_type_column):
+            msg = "Type column row error: 'Type' column rows can only contain 'in' or 'ex'"
+            raise SnapsImportException(msg)
+
+    def check_required_headings_and_raise_if_bad(self, df, filename):
+        expected_column_names = {"SS_name", "AA", "Type"}
+        found_column_names = set(df.columns)
+
+        # if 'offset' in found_column_names:
+        #     found_column_names.loc[:, found_column_names.columns != 'offset'])
+
+        if not expected_column_names.issubset(found_column_names):
+            bad_column_names = found_column_names - expected_column_names
+            if 'Offset' in bad_column_names:
+                bad_column_names.remove('Offset')
+            bad_column_names = ', '.join(bad_column_names)
+            expected_column_names = ', '.join(expected_column_names)
+            msg = f"""\
+                   Unexpected column name(s) [{bad_column_names}]
+                   in file {filename}
+                   expected column names are: {expected_column_names}"
+               """
+            raise SnapsImportException(msg)
+
+    def import_testset_shifts(self, filename, remove_Pro=True,
                           short_aa_names=True, SS_class=None, SS_class_m1=None):
         """ Import observed chemical shifts from testset data
         
@@ -457,7 +646,7 @@ class SNAPS_importer:
         
         filename: The simplified BMRB file containing observed shift info.
         remove_Pro: If True, remove proline residues from output
-        short_aa_names: If True, single letter aa codes are used, otherwise 3 
+        short_aa_names: If True, single letter aa codes are used, otherwise 3
             letter codes are used
         SS_class: Either None or a list of strings, each of which is a list of 
             amino acids (eg. ["VIA","G","S","T","DN","FHYWC","REKPQML"] would 
@@ -466,7 +655,7 @@ class SNAPS_importer:
         SS_class_m1: as above, but for the i-1 residue.
         
         """
-        #### Import the observed chemical shifts
+        # Import the observed chemical shifts
         obs_long = pd.read_table(filename)
         obs_long = obs_long[["Residue_PDB_seq_code","Residue_label",
                              "Atom_name","Chem_shift_value"]]
@@ -484,7 +673,7 @@ class SNAPS_importer:
             obs_long["Res_type"] = obs_long["Res_type"].apply(seq1)
         obs_long = obs_long.reindex(columns=["Res_N","Res_type","SS_name",
                                              "Atom_type","Shift"])
-        
+
         # Convert from long to wide
         obs = obs_long.pivot(index="Res_N", columns="Atom_type", 
                              values="Shift")
@@ -496,15 +685,15 @@ class SNAPS_importer:
         obs = pd.concat([tmp, obs], axis=1)
         
         # Make columns for the i-1 observed shifts of C, CA and CB
-        obs_m1 = obs[list({"C","CA","CB","Res_type"}.intersection(obs.columns))]
+        obs_m1 = obs[list({"C", "CA", "CB", "Res_type"}.intersection(obs.columns))]
         obs_m1.index = obs_m1.index+1
         obs_m1.columns = obs_m1.columns + "_m1"
         obs = pd.merge(obs, obs_m1, how="left", left_index=True, 
                        right_index=True)
         
         # Restrict to specific atom types
-        atom_set = {"H","N","C","CA","CB","C_m1","CA_m1","CB_m1","HA"}
-        obs = obs[["Res_N","Res_type","Res_type_m1","SS_name"]+
+        atom_set = {"H", "N", "C", "CA", "CB", "C_m1", "CA_m1", "CB_m1", "HA"}
+        obs = obs[["Res_N", "Res_type", "Res_type_m1", "SS_name"]+
                   list(atom_set.intersection(obs.columns))]
         
         # Add SS_class information
@@ -522,7 +711,7 @@ class SNAPS_importer:
         
         if remove_Pro:
             # Remove prolines, as they wouldn't be observed in a real spectrum
-            obs = obs.drop(obs.index[obs["Res_type"].isin(["PRO","P"])]) 
+            obs = obs.drop(obs.index[obs["Res_type"].isin(["PRO", "P"])])
         
         self.obs = obs
         return(self.obs)
@@ -535,8 +724,8 @@ class SNAPS_importer:
         """
         
         df = self.obs.melt(id_vars="SS_name", 
-                      value_vars=set(self.obs.columns).intersection({"H","N",
-                                    "HA","C","CA","CB","C_m1","CA_m1","CB_m1"}), 
+                      value_vars=set(self.obs.columns).intersection({"H", "N",
+                                    "HA", "C", "CA", "CB", "C_m1", "CA_m1", "CB_m1"}),
                       var_name="Atom_type", value_name="Shift")
         df = df.sort_values(by=["SS_name", "Atom_type"])
             
