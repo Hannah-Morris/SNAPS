@@ -1,4 +1,4 @@
-# SNAPS (Simple NMR Assignments from Predicted Shifts)
+# Gary's SNAPS Test (Simple NMR Assignments from Predicted Shifts)
 
 ## What is it?
 SNAPS is a tool for using chemical shift predictions to help assign protein NMR spectra. SNAPS is currently under development, and has not been fully tested, so I can't currently make any promises about its accuracy (or functionality!).

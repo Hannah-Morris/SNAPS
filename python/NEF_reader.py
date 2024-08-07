@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List
 import sys
@@ -6,6 +7,7 @@ import pandas as pd
 
 _CHEMICAL_SHIFT_LIST_FRAME = 'nef_chemical_shift_list'  # tag for the NEF chemical shift list frame
 _CHEMICAL_SHIFT_LOOP = 'nef_chemical_shift'  # tag for the NEF chemical shift list loop
+_CHAIN_CODE = 'chain_code'  # NEF loop heading for chain code
 _SEQUENCE_CODE = 'sequence_code'  # NEF loop heading for sequence
 _ATOM_NAME = 'atom_name'  # NEF loop heading for atom name
 _RESIDUE_NAME = 'residue_name'  # NEF loop heading for residue name
@@ -44,6 +46,9 @@ TRANSLATIONS_1_3_PROTEIN = {
     value: key for (key, value) in TRANSLATIONS_3_1_PROTEIN.items()
 }
 
+# ignore pynmrstar warning about loops with no data
+logging.getLogger('pynmrstar').addFilter(lambda record: "Loop with no data" not in record.msg)
+
 def read_nef_shifts_from_file(file_name: Path, shift_list_name: str = _DEFAULT_SHIFT_LIST) -> List[List[str]]:
     """
     read nef shifts from a file given by filename and return a table of shifts with headings sequence_code, atom_name
@@ -60,7 +65,7 @@ def read_nef_shifts_from_file(file_name: Path, shift_list_name: str = _DEFAULT_S
     return result_shifts
 
 
-def read_nef_shifts(file_handle, shift_list_name=_DEFAULT_SHIFT_LIST):
+def read_nef_shifts(file_handle, shift_list_name=_DEFAULT_SHIFT_LIST, chain='A'):
     """
 
     :param file_handle:
@@ -69,12 +74,15 @@ def read_nef_shifts(file_handle, shift_list_name=_DEFAULT_SHIFT_LIST):
     """
     file_name = file_handle.name
 
-    entry = pynmrstar.Entry.from_file(file_handle)
+
+    entry = pynmrstar.Entry.from_string(file_handle.read())
 
     first_shift_frame = _read_named_shift_frame_or_error(entry, shift_list_name, file_name)
 
     chem_shift_loop = _frame_to_shift_loop_or_error(file_handle.name, first_shift_frame)
 
+    #TODO should we be dealing with chains here
+    chain_index = _read_heading_index_or_error(first_shift_frame, _CHAIN_CODE, chem_shift_loop, file_name)
     sequence_index = _read_heading_index_or_error(first_shift_frame, _SEQUENCE_CODE, chem_shift_loop, file_name)
     atom_index = _read_heading_index_or_error(first_shift_frame, _ATOM_NAME, chem_shift_loop, file_name)
     chem_shift_index = _read_heading_index_or_error(first_shift_frame, _SHIFT_VALUE, chem_shift_loop, file_name)
@@ -100,23 +108,56 @@ def read_nef_shifts(file_handle, shift_list_name=_DEFAULT_SHIFT_LIST):
     return output
 
 
-def read_nef_shifts_from_file_to_pandas(file_name, shift_list_name=_DEFAULT_SHIFT_LIST):
-    with open(file_name, 'r') as file_handle:
-        output = read_nef_shifts_to_pandas(file_handle, shift_list_name)
+def read_nef_obs_shifts_from_file_to_pandas(raw_file_name, chain):
+
+    output = _raw_read_shifts_to_pandas(chain, raw_file_name)
 
     output = output.rename(columns={'sequence_code': 'SS_name', 'atom_name': 'Atom_type', 'value': 'Shift'})
 
-    if 'residue_name' == '.':
-        return output
-    elif 'residue_name' != '.':
-        output['SS_name'] = output['SS_name'].astype(str) + output['residue_name']
-        output['SS_name'] = output['SS_name'].str.title()
-        del output['residue_name']
-        return output
+    output['SS_name'] = output['SS_name'].astype(str) + output['residue_name']
+    output['SS_name'] = output['SS_name'].str.title()
+    del output['residue_name']
+
+    return output
+
+def read_nef_pred_shifts_from_file_to_pandas(raw_file_name, chain):
+
+    output = _raw_read_shifts_to_pandas(chain, raw_file_name)
+
+    output = output.rename(columns={'sequence_code': 'Res_N', 'atom_name': 'Atom_type', 'value': 'Shift', 'residue_name': 'Res_type'})
+
+    output = output.replace({'Res_type':TRANSLATIONS_3_1_PROTEIN})
+
+    return output
 
 
-def read_nef_shifts_to_pandas(file_handle, shift_list_name=_DEFAULT_SHIFT_LIST):
-    snaps_shifts = read_nef_shifts(file_handle, shift_list_name)
+
+def _raw_read_shifts_to_pandas(chain, raw_file_name):
+    if not Path(raw_file_name).exists():
+        file_name, shift_list_name = _split_path_and_frame(raw_file_name)
+    else:
+        file_name = raw_file_name
+        shift_list_name = _DEFAULT_SHIFT_LIST
+    with open(file_name, 'r') as file_handle:
+        output = read_nef_shifts_to_pandas(file_handle, shift_list_name, chain)
+    return output
+
+
+def _split_path_and_frame(file_name):
+    if ':' in file_name:
+        path_fields = file_name.split(':')
+        shift_list_name = path_fields[-1].strip()
+        if not shift_list_name:
+            shift_list_name = _DEFAULT_SHIFT_LIST
+
+        file_name = ':'.join(path_fields[:-1]).strip()
+    else:
+        shift_list_name = _DEFAULT_SHIFT_LIST
+    return file_name, shift_list_name
+
+
+def read_nef_shifts_to_pandas(file_handle, shift_list_name=_DEFAULT_SHIFT_LIST, chain="A"):
+    snaps_shifts = read_nef_shifts(file_handle, shift_list_name, chain)
 
     pandas_columns = [_SEQUENCE_CODE, _ATOM_NAME, _SHIFT_VALUE, _RESIDUE_NAME]
     return pd.DataFrame(snaps_shifts, columns=pandas_columns)
@@ -185,10 +226,25 @@ def _read_heading_index_or_error(save_frame, heading, loop, file_name):
     return sequence_index
 
 
+ERROR = 1
+
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print('Error: I need a single argument, a nef file name', file=sys.stderr)
+    num_args = len(sys.argv)
+    required_args = 'a nef file name and an optional chain_code [default=A]'
+    if num_args > 3:
+        print(f'Error: arguments are {required_args}', file=sys.stderr)
         print('exiting...', file=sys.stderr)
-        sys.exit(1)
-    result = read_nef_shifts_from_file_to_pandas(Path(sys.argv[1]))
+
+        sys.exit(ERROR)
+    elif num_args < 2:
+        print(f'Error: I need {required_args}', file=sys.stderr)
+        print('exiting...', file=sys.stderr)
+        sys.exit(ERROR)
+
+    file_path = Path(sys.argv[1])
+    if num_args == 3:
+        chain_code = sys.argv[2]
+    else:
+        chain_code = 'A'
+    result = read_nef_obs_shifts_from_file_to_pandas(file_path, chain_code)
     print(result)

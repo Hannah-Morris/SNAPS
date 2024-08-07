@@ -14,7 +14,7 @@ mainSNAPSfilePath = os.path.dirname(os.path.realpath(__file__)) + '/../python'
 sys.path.append(mainSNAPSfilePath)
 os.chdir(mainSNAPSfilePath)
 
-from SNAPS import runSNAPS
+from SNAPS import run_snaps
 app = Flask(__name__)
 app.secret_key = 'napsnapsnapsnaps' #should be changed to an external config value in production
 
@@ -29,7 +29,7 @@ def run():
 
 def run(args):
     try:
-        args.hsqc_plot, args.strip_plot = runSNAPS(args.argsToList())
+        args.hsqc_plot, args.strip_plot = run_snaps(args.argsToList())
         return createJSONForTable(args)
     except Exception as e:
         #log errors

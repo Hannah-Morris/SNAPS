@@ -9,7 +9,7 @@ import pandas as pd
 from Bio.SeqUtils import seq1
 from math import sqrt
 
-from NEF_reader import read_nef_shifts_from_file_to_pandas, TRANSLATIONS_3_1_PROTEIN
+from NEF_reader import read_nef_obs_shifts_from_file_to_pandas, TRANSLATIONS_3_1_PROTEIN, _split_path_and_frame
 
 POSSIBLE_1LET_AAS_STR = "ACDEFGHIKLMNPQRSTVWY"
 
@@ -309,7 +309,7 @@ class SNAPS_importer:
         self.obs = obs
         return(self.obs)
             
-    def import_obs_shifts(self, filename, filetype, SS_num=False):
+    def import_obs_shifts(self, filename, filetype, SS_num=False, chain='A'):
         """ Import a chemical shift list
         
         filename: Path to text file containing chemical shifts.
@@ -367,7 +367,7 @@ class SNAPS_importer:
                                             "CB","C_m1","CA_m1","CB_m1"], 
                                 var_name="Atom_type", value_name="Shift")
         elif filetype =='nef':
-            obs = read_nef_shifts_from_file_to_pandas(filename)
+            obs = read_nef_obs_shifts_from_file_to_pandas(filename, chain)
 
 #        elif filetype == "nmrstar":
 #            tmp = nmrstarlib.read_files(filename)
@@ -405,15 +405,15 @@ class SNAPS_importer:
         self.obs = obs
         return self.obs
 
-    def import_aa_type_info_nef(self, entry: Entry, frame_name: str):
+    def import_aa_type_info_nef(self, file_name:str):
         """ Add amino acid type information to previously-imported observed
         shifts
 
-        entry: a pynmrstar Entry object containing amino acid information
-        offset: either "i" or "i-1". Whether the aa type restriction
-        frame_name: the name of the NEF frame with the restraints in it
-        applies to the i spin system or to the preceeding i-1 spin system.
+        file_name: a a path to a NEF file containing amino acid information
+                    with a frame name attached eg xyz.nef:frame_name
+
         """
+
         def is_int(str):
             result = True
             try:
@@ -426,6 +426,10 @@ class SNAPS_importer:
         RESIDUE_TYPES_TAG = '_nefpls_residue_type'
         REQUIRED_TAG_SET = set([f'{RESIDUE_TYPES_TAG}.{tag}' for tag in 'chain_code sequence_code residue_type'.split()])
         LEN_RESIDUE_TYPES = len(RESIDUE_TYPES_FRAME)
+
+        file_name, frame_name = _split_path_and_frame(file_name)
+        entry = Entry.from_file(file_name)
+
         frames = entry.get_saveframes_by_category('nefpls_residue_types')
         frames = [frame for frame in frames if frame.name[LEN_RESIDUE_TYPES:].strip('_') == frame_name]
 
@@ -459,7 +463,7 @@ class SNAPS_importer:
                     if not sequence_code[0] == '@':
                         continue
 
-                    chain_code = chain_code[1:]
+                    # chain_code = chain_code[1:]
                     sequence_code = sequence_code[1:]
 
                     sequence_code_offset = 0

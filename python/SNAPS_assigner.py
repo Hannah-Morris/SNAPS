@@ -31,10 +31,12 @@ import logging
 import yaml
 from pathlib import Path
 
+from NEF_reader import read_nef_pred_shifts_from_file_to_pandas
+
 
 def df_lookup(df, row_labels, col_labels, index="rows"):
     """Look up a series of locations in a data frame df, with the row and
-    column indicies given by row_labels and col_labels. This replaces the
+    column indices given by row_labels and col_labels. This replaces the
     DataFrame.lookup() that was part of previous versions of pandas.
 
     Returns
@@ -42,8 +44,8 @@ def df_lookup(df, row_labels, col_labels, index="rows"):
 
     Parameters
     df
-    row_labels: the row indicies of the values to be fetched
-    col_labels: the column indicies of the values to be fetched
+    row_labels: the row indices of the values to be fetched
+    col_labels: the column indices of the values to be fetched
     eg. if row_labels=[1,3] and col_labels=['b','e'], the function would return a Series
     consisting of df.loc[1,'b'] and df.loc[3,'e']
 
@@ -207,7 +209,7 @@ class SNAPS_assigner:
 
         return (self.seq_df)
 
-    def import_pred_shifts(self, filename, filetype, offset=0):
+    def import_pred_shifts(self, filename, filetype, chain, offset=0):
         """ Import predicted chemical shifts from a ShiftX2 results file.
 
         Returns
@@ -220,7 +222,22 @@ class SNAPS_assigner:
         """
 
         #### Import the raw data
-        if filetype == "shiftx2":
+        #TODO move this to importer
+        if filetype == "nef":
+            # Import the NEF file
+            from SNAPS_importer import SNAPS_importer
+            importer = SNAPS_importer()
+
+            preds_long = read_nef_pred_shifts_from_file_to_pandas(filename, chain)
+
+            preds_long = preds_long.loc[:,['Res_N', 'Res_type', 'Atom_type', 'Shift']]
+
+            preds_long = preds_long.astype({'Res_N': 'int32', 'Shift': 'float64'})
+
+            preds_long.rename(columns={'sequence_code': 'Res_N', 'atom_name': 'Atom_type', 'value': 'Shift'})
+
+
+        elif filetype == "shiftx2":
             preds_long = pd.read_csv(filename)
             if any(preds_long.columns == "CHAIN"):
                 if len(preds_long["CHAIN"].unique()) > 1:
@@ -240,7 +257,7 @@ class SNAPS_assigner:
                         colnames = line.split()[1:]
                         break
 
-            preds_long = pd.read_table(filename, sep="\s+", names=colnames,
+            preds_long = pd.read_table(filename, sep=r"\s+", names=colnames,
                                        skiprows=colnames_line + 1)
             preds_long = preds_long.reindex(columns=["RESID", "RESNAME",
                                                      "ATOMNAME", "SHIFT"])
@@ -460,6 +477,9 @@ class SNAPS_assigner:
                          % sum(preds["Res_type"] == "P"))
         preds = preds.drop(preds.index[preds["Res_type"] == "P"])
 
+        #### Delete any unassigned shifts
+        preds = preds.drop(preds.index[preds["Res_type"] == "X"])
+
         # Remove references to deleted residues from Res_name_m1/p1
         preds.loc[~preds["Res_name_m1"].isin(preds["Res_name"]), "Res_name_m1"] = np.NaN
         preds.loc[~preds["Res_name_p1"].isin(preds["Res_name"]), "Res_name_p1"] = np.NaN
@@ -663,8 +683,7 @@ class SNAPS_assigner:
             # each Res/SS pair
             log_prob_matrix = log_prob_matrix + log10(default_prob) * na_matrix
 
-        original_log_prob_matrix = log_prob_matrix.copy(deep=True)
-
+        # original_log_prob_matrix = log_prob_matrix.copy(deep=True)
 
         if self.pars["use_ss_class_info"]:
             log_prob_matrix = self._apply_ss_class_penalties(log_prob_matrix, obs, preds)
@@ -706,7 +725,10 @@ class SNAPS_assigner:
             # For each amino acid type in turn:
             for res in preds[active_res_ss_class].dropna().unique():
                 # Work out which observations could be that aa type
-                # print('obs ss_class',obs[ss_class])
+
+                if res == 'X':
+                    continue
+
                 allowed = obs[ss_class].str.contains(res).fillna(True)
 
                 # Select the predictions which are that aa type
@@ -912,14 +934,12 @@ class SNAPS_assigner:
                                  valid_atoms + ["Res_name"])],
                              on="Res_name", suffixes=("", "_pred"), how="left")
 
-        # assign_df["Log_prob"] = log_prob_matrix.lookup(
-        #                                     assign_df["SS_name"],
-        #                                     assign_df["Res_name"])
-        assign_df["Log_prob"] = df_lookup(log_prob_matrix,
+        # Careful above not to get rows/columns confused
+        series = df_lookup(log_prob_matrix,
                                           assign_df["SS_name"],
                                           assign_df["Res_name"])
-        # Careful above not to get rows/columns confused
 
+        assign_df["Log_prob"] = assign_df["SS_name"].map(series)
         assign_df = assign_df.sort_values(by="Res_N")
 
         if set_assign_df:
@@ -1451,11 +1471,11 @@ class SNAPS_assigner:
                           filepath))
         return (output_df)
 
-    def output_peaklists(self, filepath, format="sparky",
-                         spectra=["hsqc", "hnco", "hncaco", "hncacb", "hncocacb"]):
-        """ Output assigned peaklists
-        """
-        return (0)
+    # def output_peaklists(self, filepath, format="sparky",
+    #                      spectra=["hsqc", "hnco", "hncaco", "hncacb", "hncocacb"]):
+    #     """ Output assigned peaklists
+    #     """
+    #     return (0)
 
     def plot_strips(self, outfile=None, format="html", return_json=True, plot_width=1000):
         """Make a strip plot of the assignment.
