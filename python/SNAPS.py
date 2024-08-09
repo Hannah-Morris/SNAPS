@@ -199,8 +199,10 @@ def run_snaps(system_args):
     plots = _output_plots(args, assigner, logger)
 
     #### Close the log file
-    logger.handlers[0].close()
-    logger.removeHandler(logger.handlers[0])
+    if logger.handlers:
+        for handler in logger.handlers:
+            handler.close()
+            logger.removeHandler(handler)
 
     return(plots)
 
