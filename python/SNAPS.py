@@ -164,7 +164,7 @@ def run_snaps(system_args):
 
 
     # import predicted shifts
-    #TODO mov e this to importer
+    #TODO move this to importer
     if args.pred_type == "nef":
         if not Path(args.pred_file).exists():
             file_name, shift_list_name = _split_path_and_frame(args.shift_file)
@@ -199,8 +199,10 @@ def run_snaps(system_args):
     plots = _output_plots(args, assigner, logger)
 
     #### Close the log file
-    logger.handlers[0].close()
-    logger.removeHandler(logger.handlers[0])
+    if logger.handlers:
+        for handler in logger.handlers:
+            handler.close()
+            logger.removeHandler(handler)
 
     return(plots)
 
@@ -369,12 +371,13 @@ def _output_results(args, assigner, logger,):
 
 
 def _import_aa_type_info(args, assigner, importer):
-    if args.aa_type:
-        if args.shift_type == "snaps":
-            importer.import_aa_type_info(args.aa_type[0])
+    if args.aa_restraints:
+        if args.aa_type == "snaps":
+            importer.import_aa_type_info_file(args.aa_restraints[0])
             assigner.pars["use_ss_class_info"] = True
-        elif args.shift_type == 'nef':
-            importer.import_aa_type_info_nef(args.shift_file)
+        elif args.aa_type == 'nef':
+            file_name = args.aa_restraints[0] if args.aa_restraints else args.shift_file
+            importer.import_aa_type_info_nef(file_name)
             assigner.pars["use_ss_class_info"] = True
         else:
             print(f'wrong file format [{args.aa_type}] for aa type info should be one of nef or snaps', file=sys.stderr)

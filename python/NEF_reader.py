@@ -115,6 +115,7 @@ def read_nef_obs_shifts_from_file_to_pandas(raw_file_name, chain):
     output = output.rename(columns={'sequence_code': 'SS_name', 'atom_name': 'Atom_type', 'value': 'Shift'})
 
     output['SS_name'] = output['SS_name'].astype(str) + output['residue_name']
+    #TODO: why is this title case
     output['SS_name'] = output['SS_name'].str.title()
     del output['residue_name']
 
